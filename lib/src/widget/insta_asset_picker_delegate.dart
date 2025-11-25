@@ -39,8 +39,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
     required InstaAssetPickerConfig config,
     super.keepScrollOffset,
     super.locale,
-  })  : _cropController =
-            InstaAssetsCropController(keepScrollOffset, config.cropDelegate),
+  })  : _cropController = InstaAssetsCropController(keepScrollOffset, config.cropDelegate),
         title = config.title,
         closeOnComplete = config.closeOnComplete,
         skipCropOnComplete = config.skipCropOnComplete,
@@ -48,13 +47,11 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
         super(
           gridCount: config.gridCount,
           pickerTheme: config.pickerTheme,
-          specialItemPosition:
-              config.specialItemPosition ?? SpecialItemPosition.none,
+          specialItemPosition: config.specialItemPosition ?? SpecialItemPosition.none,
           specialItemBuilder: config.specialItemBuilder,
           loadingIndicatorBuilder: config.loadingIndicatorBuilder,
           selectPredicate: config.selectPredicate,
-          limitedPermissionOverlayPredicate:
-              config.limitedPermissionOverlayPredicate,
+          limitedPermissionOverlayPredicate: config.limitedPermissionOverlayPredicate,
           themeColor: config.themeColor,
           textDelegate: config.textDelegate,
           gridThumbnailSize: config.gridThumbnailSize,
@@ -137,9 +134,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
   /// Returns thumbnail [index] position in scroll view
   double indexPosition(BuildContext context, int index) {
     final row = (index / gridCount).floor();
-    final size =
-        (MediaQuery.of(context).size.width - itemSpacing * (gridCount - 1)) /
-            gridCount;
+    final size = (MediaQuery.of(context).size.width - itemSpacing * (gridCount - 1)) / gridCount;
     return row * size + (row * itemSpacing);
   }
 
@@ -175,8 +170,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
     // preview the first of the list
     if (shouldDisplayAssets && p.selectedAssets.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        final list =
-            await p.currentPath?.path.getAssetListRange(start: 0, end: 1);
+        final list = await p.currentPath?.path.getAssetListRange(start: 0, end: 1);
         if (_mounted && (list?.isNotEmpty ?? false)) {
           _cropController.previewAsset.value = list!.first;
         }
@@ -198,12 +192,9 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
       return;
     }
     // if is preview asset, unselect it
-    if (provider.selectedAssets.isNotEmpty &&
-        _cropController.previewAsset.value == currentAsset) {
+    if (provider.selectedAssets.isNotEmpty && _cropController.previewAsset.value == currentAsset) {
       selectAsset(context, currentAsset, index, true);
-      _cropController.previewAsset.value = provider.selectedAssets.isEmpty
-          ? currentAsset
-          : provider.selectedAssets.last;
+      _cropController.previewAsset.value = provider.selectedAssets.isEmpty ? currentAsset : provider.selectedAssets.last;
       return;
     }
 
@@ -231,9 +222,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
     final selectedAssets = provider.selectedAssets;
     if (prevCount < selectedAssets.length) {
       _cropController.previewAsset.value = asset;
-    } else if (selected &&
-        asset == _cropController.previewAsset.value &&
-        selectedAssets.isNotEmpty) {
+    } else if (selected && asset == _cropController.previewAsset.value && selectedAssets.isNotEmpty) {
       _cropController.previewAsset.value = selectedAssets.last;
     }
 
@@ -247,10 +236,8 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
     double position,
     double reducedPosition,
   ) {
-    final isScrollUp = gridScrollController.position.userScrollDirection ==
-        ScrollDirection.reverse;
-    final isScrollDown = gridScrollController.position.userScrollDirection ==
-        ScrollDirection.forward;
+    final isScrollUp = gridScrollController.position.userScrollDirection == ScrollDirection.reverse;
+    final isScrollDown = gridScrollController.position.userScrollDirection == ScrollDirection.forward;
 
     if (notification is ScrollEndNotification) {
       _lastEndScrollOffset = gridScrollController.offset;
@@ -262,26 +249,20 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
     }
 
     // expand crop view
-    if (isScrollDown &&
-        gridScrollController.offset <= 0 &&
-        position < _kExtendedCropViewPosition) {
+    if (isScrollDown && gridScrollController.offset <= 0 && position < _kExtendedCropViewPosition) {
       // if scroll at edge, compute position based on scroll
       if (_lastScrollOffset > gridScrollController.offset) {
-        _cropViewPosition.value -=
-            (_lastScrollOffset.abs() - gridScrollController.offset.abs()) * 6;
+        _cropViewPosition.value -= (_lastScrollOffset.abs() - gridScrollController.offset.abs()) * 6;
       } else {
         // otherwise just expand it
         _expandCropView();
       }
     } else if (isScrollUp &&
-        (gridScrollController.offset - _lastEndScrollOffset) *
-                _kScrollMultiplier >
-            cropViewHeight(context) - position &&
+        (gridScrollController.offset - _lastEndScrollOffset) * _kScrollMultiplier > cropViewHeight(context) - position &&
         position > reducedPosition) {
       // reduce crop view
-      _cropViewPosition.value = cropViewHeight(context) -
-          (gridScrollController.offset - _lastEndScrollOffset) *
-              _kScrollMultiplier;
+      _cropViewPosition.value =
+          cropViewHeight(context) - (gridScrollController.offset - _lastEndScrollOffset) * _kScrollMultiplier;
     }
 
     _lastScrollOffset = gridScrollController.offset;
@@ -316,8 +297,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
           Feedback.forTap(context);
           isSwitchingPath.value = !isSwitchingPath.value;
         },
-        child:
-            Selector<DefaultAssetPickerProvider, PathWrapper<AssetPathEntity>?>(
+        child: Selector<DefaultAssetPickerProvider, PathWrapper<AssetPathEntity>?>(
           selector: (_, DefaultAssetPickerProvider p) => p.currentPath,
           builder: (_, PathWrapper<AssetPathEntity>? p, Widget? w) => Row(
             mainAxisSize: MainAxisSize.min,
@@ -413,9 +393,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
                   foregroundColor: themeColor,
                   disabledForegroundColor: theme.dividerColor,
                 ),
-            onPressed: isLoaded && p.isSelectedNotEmpty
-                ? () => onConfirm(context)
-                : null,
+            onPressed: isLoaded && p.isSelectedNotEmpty ? () => onConfirm(context) : null,
             child: isLoaded
                 ? Text(
                     p.isSelectedNotEmpty && !isSingleAssetMode
@@ -438,10 +416,8 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
   @override
   Widget androidLayout(BuildContext context) {
     // height of appbar + cropview + path selector row
-    final topWidgetHeight = cropViewHeight(context) +
-        kToolbarHeight +
-        _kPathSelectorRowHeight +
-        MediaQuery.of(context).padding.top;
+    final topWidgetHeight =
+        cropViewHeight(context) + kToolbarHeight + _kPathSelectorRowHeight + MediaQuery.of(context).padding.top;
 
     return ChangeNotifierProvider<DefaultAssetPickerProvider>.value(
       value: provider,
@@ -449,36 +425,25 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
           valueListenable: _cropViewPosition,
           builder: (context, position, child) {
             // the top position when the crop view is reduced
-            final topReducedPosition = -(cropViewHeight(context) -
-                _kReducedCropViewHeight +
-                kToolbarHeight);
-            position =
-                position.clamp(topReducedPosition, _kExtendedCropViewPosition);
+            final topReducedPosition = -(cropViewHeight(context) - _kReducedCropViewHeight + kToolbarHeight);
+            position = position.clamp(topReducedPosition, _kExtendedCropViewPosition);
             // the height of the crop view visible on screen
-            final cropViewVisibleHeight = (topWidgetHeight +
-                    position -
-                    MediaQuery.of(context).padding.top -
-                    kToolbarHeight -
-                    _kPathSelectorRowHeight)
-                .clamp(_kReducedCropViewHeight, topWidgetHeight);
+            final cropViewVisibleHeight =
+                (topWidgetHeight + position - MediaQuery.of(context).padding.top - kToolbarHeight - _kPathSelectorRowHeight)
+                    .clamp(_kReducedCropViewHeight, topWidgetHeight);
             // opacity is calculated based on the position of the crop view
-            final opacity =
-                ((position / -topReducedPosition) + 1).clamp(0.4, 1.0);
-            final animationDuration = position == topReducedPosition ||
-                    position == _kExtendedCropViewPosition
+            final opacity = ((position / -topReducedPosition) + 1).clamp(0.4, 1.0);
+            final animationDuration = position == topReducedPosition || position == _kExtendedCropViewPosition
                 ? const Duration(milliseconds: 250)
                 : Duration.zero;
 
-            double gridHeight = MediaQuery.of(context).size.height -
-                kToolbarHeight -
-                _kReducedCropViewHeight;
+            double gridHeight = MediaQuery.of(context).size.height - kToolbarHeight - _kReducedCropViewHeight;
             // when not assets are displayed, compute the exact height to show the loader
             if (!provider.hasAssetsToDisplay) {
               gridHeight -= cropViewHeight(context) - -_cropViewPosition.value;
             }
             final topPadding = topWidgetHeight + position;
-            if (gridScrollController.hasClients &&
-                _scrollTargetOffset != null) {
+            if (gridScrollController.hasClients && _scrollTargetOffset != null) {
               gridScrollController.jumpTo(_scrollTargetOffset!);
             }
             _scrollTargetOffset = null;
@@ -531,8 +496,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
                                 _expandCropView();
                                 // stop scroll event
                                 if (gridScrollController.hasClients) {
-                                  gridScrollController
-                                      .jumpTo(gridScrollController.offset);
+                                  gridScrollController.jumpTo(gridScrollController.offset);
                                 }
                               },
                               child: CropViewer(
@@ -576,18 +540,14 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
 
   /// Returns the [ListView] containing the albums
   Widget _buildListAlbums(BuildContext context) {
-    return Consumer<DefaultAssetPickerProvider>(
-        builder: (BuildContext context, provider, __) {
+    return Consumer<DefaultAssetPickerProvider>(builder: (BuildContext context, provider, __) {
       if (isAppleOS(context)) return pathEntityListWidget(context);
 
       // NOTE: fix position on android, quite hacky could be optimized
       return ValueListenableBuilder<bool>(
         valueListenable: isSwitchingPath,
-        builder: (_, bool isSwitchingPath, Widget? child) =>
-            Transform.translate(
-          offset: isSwitchingPath
-              ? Offset(0, kToolbarHeight + MediaQuery.of(context).padding.top)
-              : Offset.zero,
+        builder: (_, bool isSwitchingPath, Widget? child) => Transform.translate(
+          offset: isSwitchingPath ? Offset(0, kToolbarHeight + MediaQuery.of(context).padding.top) : Offset.zero,
           child: Stack(
             children: [pathEntityListWidget(context)],
           ),
@@ -600,8 +560,7 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
   Widget _buildGrid(BuildContext context) {
     return Consumer<DefaultAssetPickerProvider>(
       builder: (BuildContext context, DefaultAssetPickerProvider p, __) {
-        final bool shouldDisplayAssets =
-            p.hasAssetsToDisplay || shouldBuildSpecialItem;
+        final bool shouldDisplayAssets = p.hasAssetsToDisplay || shouldBuildSpecialItem;
         _initializePreviewAsset(p, shouldDisplayAssets);
 
         return AnimatedSwitcher(
@@ -636,18 +595,14 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         border: Border.all(color: theme.unselectedWidgetColor, width: 1),
-        color: isSelected
-            ? themeColor
-            : theme.unselectedWidgetColor.withValues(alpha: .2),
+        color: isSelected ? themeColor : theme.unselectedWidgetColor.withValues(alpha: .2),
         shape: BoxShape.circle,
       ),
       child: FittedBox(
         child: AnimatedSwitcher(
           duration: duration,
           reverseDuration: duration,
-          child: isSelected
-              ? Text((indexSelected + 1).toString())
-              : const SizedBox.shrink(),
+          child: isSelected ? Text((indexSelected + 1).toString()) : const SizedBox.shrink(),
         ),
       ),
     );
@@ -659,22 +614,18 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
 
         return Positioned.fill(
           child: GestureDetector(
-            onTap: isPreviewEnabled
-                ? () => viewAsset(context, index, asset)
-                : null,
+            onTap: isPreviewEnabled ? () => viewAsset(context, index, asset) : null,
             child: AnimatedContainer(
               duration: switchingPathDuration,
               padding: const EdgeInsets.all(4),
-              color: isPreview
-                  ? theme.unselectedWidgetColor.withValues(alpha: .5)
-                  : theme.colorScheme.surface.withValues(alpha: .1),
+              color:
+                  isPreview ? theme.unselectedWidgetColor.withValues(alpha: .5) : theme.colorScheme.surface.withValues(alpha: .1),
               child: Align(
                 alignment: AlignmentDirectional.topEnd,
                 child: isSelected && !isSingleAssetMode
                     ? GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () =>
-                            selectAsset(context, asset, index, isSelected),
+                        onTap: () => selectAsset(context, asset, index, isSelected),
                         child: innerSelector,
                       )
                     : innerSelector,
@@ -687,14 +638,120 @@ class InstaAssetPickerBuilder extends DefaultAssetPickerBuilderDelegate {
   }
 
   @override
-  Widget selectedBackdrop(BuildContext context, int index, AssetEntity asset) =>
-      const SizedBox.shrink();
+  Color interactiveTextColor(BuildContext context) {
+    return context.theme.textButtonTheme.style?.foregroundColor?.resolve({}) ?? Colors.black;
+  }
+
+  @override
+  Widget selectedBackdrop(BuildContext context, int index, AssetEntity asset) => const SizedBox.shrink();
 
   /// Disable item banned indicator in single mode (#26) so that
   /// the new selected asset replace the old one
   @override
   Widget itemBannedIndicator(BuildContext context, AssetEntity asset) =>
-      isSingleAssetMode
-          ? const SizedBox.shrink()
-          : super.itemBannedIndicator(context, asset);
+      isSingleAssetMode ? const SizedBox.shrink() : super.itemBannedIndicator(context, asset);
+
+  @override
+  Widget permissionOverlay(BuildContext context) {
+    final Size size = MediaQuery.sizeOf(context);
+    final EdgeInsets padding = MediaQuery.paddingOf(context);
+    final Widget closeButton = Container(
+      margin: const EdgeInsetsDirectional.only(start: 16, top: 4),
+      alignment: AlignmentDirectional.centerStart,
+      child: IconButton(
+        onPressed: () {
+          Navigator.maybeOf(context)?.maybePop();
+        },
+        icon: const Icon(Icons.close),
+        padding: EdgeInsets.zero,
+        constraints: BoxConstraints.tight(const Size.square(32)),
+        tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+      ),
+    );
+
+    final Widget limitedTips = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          ScaleText(
+            textDelegate.unableToAccessAll,
+            style: const TextStyle(fontSize: 22),
+            textAlign: TextAlign.center,
+            semanticsLabel: semanticsTextDelegate.unableToAccessAll,
+          ),
+          SizedBox(height: size.height / 30),
+          ScaleText(
+            textDelegate.accessAllTip,
+            style: const TextStyle(fontSize: 18),
+            textAlign: TextAlign.center,
+            semanticsLabel: semanticsTextDelegate.accessAllTip,
+          ),
+        ],
+      ),
+    );
+
+    final Widget goToSettingsButton = ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        minimumSize: Size(size.width / 2, appBarItemHeight * 1.25),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        backgroundColor: Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(5),
+        ),
+      ),
+      onPressed: PhotoManager.openSetting,
+      child: ScaleText(
+        textDelegate.goToSystemSettings,
+        style: const TextStyle(fontSize: 17),
+        semanticsLabel: semanticsTextDelegate.goToSystemSettings,
+      ),
+    );
+
+    final Widget accessLimitedButton = Semantics(
+      label: semanticsTextDelegate.accessLimitedAssets,
+      button: true,
+      child: GestureDetector(
+        onTap: () {
+          permissionOverlayDisplay.value = false;
+        },
+        child: ScaleText(
+          textDelegate.accessLimitedAssets,
+          style: TextStyle(color: interactiveTextColor(context)),
+        ),
+      ),
+    );
+
+    return ValueListenableBuilder2<PermissionState, bool>(
+      firstNotifier: permissionNotifier,
+      secondNotifier: permissionOverlayDisplay,
+      builder: (_, PermissionState ps, bool isDisplay, __) {
+        if (ps.isAuth || !isDisplay) {
+          return const SizedBox.shrink();
+        }
+        return Positioned.fill(
+          child: Semantics(
+            sortKey: const OrdinalSortKey(0),
+            child: Container(
+              padding: EdgeInsets.only(top: padding.top),
+              color: context.theme.canvasColor,
+              child: Column(
+                children: <Widget>[
+                  closeButton,
+                  Expanded(child: limitedTips),
+                  goToSettingsButton,
+                  SizedBox(height: size.height / 18),
+                  accessLimitedButton,
+                  SizedBox(
+                    height: math.max(padding.bottom, 24.0),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

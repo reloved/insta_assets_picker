@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:fraction/fraction.dart';
+import 'package:image/image.dart' as img;
 import 'package:insta_assets_crop/insta_assets_crop.dart';
 import 'package:insta_assets_picker/insta_assets_picker.dart';
 
@@ -58,6 +60,7 @@ class InstaAssetsCropData {
 
   // export crop params
   final double scale;
+  final int rotation; // 0, 1, 2, 3 (quarter turns)
   final Rect? area;
 
   /// Returns crop filter for ffmpeg in "out_w:out_h:x:y" format
@@ -81,21 +84,30 @@ class InstaAssetsCropData {
     return 'iw*$scale:ih*$scale';
   }
 
+  /// Returns rotate filter for ffmpeg in "rotate=angle" format
+  String? get ffmpegRotate {
+    if (rotation == 0) return null;
+    return 'rotate=${rotation * 90 * math.pi / 180}';
+  }
+
   const InstaAssetsCropData({
     required this.asset,
     required this.cropParam,
     this.scale = 1.0,
+    this.rotation = 0,
     this.area,
   });
 
   static InstaAssetsCropData fromState({
     required AssetEntity asset,
     required CropState? cropState,
+    int rotation = 0,
   }) {
     return InstaAssetsCropData(
       asset: asset,
       cropParam: cropState?.internalParameters,
       scale: cropState?.scale ?? 1.0,
+      rotation: rotation,
       area: cropState?.area,
     );
   }
@@ -116,6 +128,9 @@ class InstaAssetsCropController {
   final ValueNotifier<AssetEntity?> previewAsset =
       ValueNotifier<AssetEntity?>(null);
 
+  /// The rotation of the crop view (quarter turns)
+  final ValueNotifier<int> rotation = ValueNotifier<int>(0);
+
   /// Options related to crop
   final InstaAssetCropDelegate cropDelegate;
 
@@ -131,6 +146,7 @@ class InstaAssetsCropController {
     isCropViewReady.dispose();
     cropRatioIndex.dispose();
     previewAsset.dispose();
+    rotation.dispose();
   }
 
   double get aspectRatio {
@@ -154,6 +170,15 @@ class InstaAssetsCropController {
     }
   }
 
+  void rotate() {
+    rotation.value = (rotation.value + 1) % 4;
+  }
+
+  void applyRotation(AssetEntity asset) {
+    final index = cropParameters.indexWhere((e) => e.asset == asset);
+    rotation.value = (index != -1) ? cropParameters[index].rotation : 0;
+  }
+
   /// Use [_cropParameters] when [keepMemory] is `false`, otherwise use [InstaAssetsCropSingleton.cropParameters]
   List<InstaAssetsCropData> get cropParameters =>
       keepMemory ? InstaAssetsCropSingleton.cropParameters : _cropParameters;
@@ -172,6 +197,7 @@ class InstaAssetsCropController {
   void clear() {
     updateStoreCropParam([]);
     previewAsset.value = null;
+    rotation.value = 0;
   }
 
   /// When the preview asset is changed, save the crop parameters of the previous asset
@@ -192,6 +218,7 @@ class InstaAssetsCropController {
         newList.add(InstaAssetsCropData.fromState(
           asset: saveAsset,
           cropState: saveCropState,
+          rotation: rotation.value,
         ));
         // if it is not the asset to save and no crop parameter exists
       } else if (savedCropAsset == null) {
@@ -210,7 +237,6 @@ class InstaAssetsCropController {
 
   /// Returns the crop parametes [InstaAssetsCropData] of the given asset
   InstaAssetsCropData? get(AssetEntity asset) {
-    if (cropParameters.isEmpty) return null;
     final index = cropParameters.indexWhere((e) => e.asset == asset);
     if (index == -1) return null;
     return cropParameters[index];
@@ -249,16 +275,33 @@ class InstaAssetsCropController {
 
         final scale = list[i].scale;
         final area = list[i].area;
+        final rotation = list[i].rotation;
 
         if (file == null) {
           throw 'error file is null';
         }
 
         // makes the sample file to not be too small
-        final sampledFile = await InstaAssetsCrop.sampleImage(
+        var sampledFile = await InstaAssetsCrop.sampleImage(
           file: file,
           preferredSize: (cropDelegate.preferredSize / scale).round(),
         );
+
+        // rotate the image if needed
+        if (rotation != 0) {
+          final bytes = await sampledFile.readAsBytes();
+          final image = img.decodeImage(bytes);
+
+          if (image != null) {
+            final rotatedImage = img.copyRotate(image, angle: rotation * 90);
+            final rotatedBytes = img.encodeJpg(rotatedImage);
+            final rotatedFile = await File(
+                    '${sampledFile.parent.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.jpg')
+                .writeAsBytes(rotatedBytes);
+            sampledFile.delete();
+            sampledFile = rotatedFile;
+          }
+        }
 
         if (area == null) {
           data.add(InstaAssetsExportData(

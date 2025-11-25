@@ -35,8 +35,9 @@ class CropViewer extends StatefulWidget {
 }
 
 class CropViewerState extends State<CropViewer> {
-  final _cropKey = GlobalKey<insta_crop_view.CropState>();
+  GlobalKey<insta_crop_view.CropState> _cropKey = GlobalKey<insta_crop_view.CropState>();
   AssetEntity? _previousAsset;
+  int _lastRotation = 0;
 
   @override
   void deactivate() {
@@ -85,6 +86,10 @@ class CropViewerState extends State<CropViewer> {
               saveCurrentCropChanges();
             }
 
+            if (asset != _previousAsset) {
+              widget.controller.applyRotation(asset);
+            }
+
             _previousAsset = asset;
 
             // hide crop button if an asset is selected or if there is only one crop
@@ -93,19 +98,34 @@ class CropViewerState extends State<CropViewer> {
 
             return ValueListenableBuilder<int>(
               valueListenable: widget.controller.cropRatioIndex,
-              builder: (context, _, __) => Opacity(
-                opacity: widget.opacity,
-                child: InnerCropView(
-                  cropKey: _cropKey,
-                  asset: asset,
-                  cropParam: savedCropParam,
-                  controller: widget.controller,
-                  textDelegate: widget.textDelegate,
-                  theme: widget.theme,
-                  height: widget.height,
-                  hideCropButton: hideCropButton,
-                  previewThumbnailSize: widget.previewThumbnailSize,
-                ),
+              builder: (context, _, __) => ValueListenableBuilder<int>(
+                valueListenable: widget.controller.rotation,
+                builder: (context, rotation, __) {
+                  if (rotation != _lastRotation) {
+                    _cropKey = GlobalKey<insta_crop_view.CropState>();
+                    _lastRotation = rotation;
+                  }
+
+                  final data = widget.controller.get(asset);
+                  final savedCropParam =
+                      data?.rotation == rotation ? data?.cropParam : null;
+
+                  return Opacity(
+                    opacity: widget.opacity,
+                    child: InnerCropView(
+                      cropKey: _cropKey,
+                      asset: asset,
+                      cropParam: savedCropParam,
+                      controller: widget.controller,
+                      textDelegate: widget.textDelegate,
+                      theme: widget.theme,
+                      height: widget.height,
+                      hideCropButton: hideCropButton,
+                      previewThumbnailSize: widget.previewThumbnailSize,
+                      rotation: rotation,
+                    ),
+                  );
+                },
               ),
             );
           },
@@ -127,6 +147,7 @@ class InnerCropView extends InstaAssetVideoPlayerStatefulWidget {
     required this.hideCropButton,
     required this.cropKey,
     required this.previewThumbnailSize,
+    required this.rotation,
   });
 
   final insta_crop_view.CropInternal? cropParam;
@@ -137,6 +158,7 @@ class InnerCropView extends InstaAssetVideoPlayerStatefulWidget {
   final bool hideCropButton;
   final GlobalKey<insta_crop_view.CropState> cropKey;
   final ThumbnailSize? previewThumbnailSize;
+  final int rotation;
 
   @override
   State<InnerCropView> createState() => _InnerCropViewState();
@@ -229,29 +251,38 @@ class _InnerCropViewState extends State<InnerCropView>
             disableResize: true,
             backgroundColor: widget.theme.canvasColor,
             initialParam: widget.cropParam,
-            size: widget.asset.orientatedSize,
+            size: () {
+              if (widget.rotation % 2 != 0) {
+                return Size(widget.asset.orientatedHeight.toDouble(),
+                    widget.asset.orientatedWidth.toDouble());
+              }
+              return widget.asset.orientatedSize;
+            }(),
             child: widget.asset.type == AssetType.image
-                ? ExtendedImage(
-                    image: AssetEntityImageProvider(
-                      widget.asset,
-                      isOriginal: true,
+                ? RotatedBox(
+                    quarterTurns: widget.rotation,
+                    child: ExtendedImage(
+                      image: AssetEntityImageProvider(
+                        widget.asset,
+                        isOriginal: true,
+                      ),
+                      loadStateChanged: (ExtendedImageState state) {
+                        switch (state.extendedImageLoadState) {
+                          case LoadState.completed:
+                            onLoading(false);
+                            onError(false);
+                            return state.completedWidget;
+                          case LoadState.loading:
+                            onLoading(true);
+                            onError(false);
+                            return buildLoader();
+                          case LoadState.failed:
+                            onLoading(false);
+                            onError(true);
+                            return buildLoader();
+                        }
+                      },
                     ),
-                    loadStateChanged: (ExtendedImageState state) {
-                      switch (state.extendedImageLoadState) {
-                        case LoadState.completed:
-                          onLoading(false);
-                          onError(false);
-                          return state.completedWidget;
-                        case LoadState.loading:
-                          onLoading(true);
-                          onError(false);
-                          return buildLoader();
-                        case LoadState.failed:
-                          onLoading(false);
-                          onError(true);
-                          return buildLoader();
-                      }
-                    },
                   )
                 // build video
                 : buildDefault(),
@@ -283,6 +314,7 @@ class _InnerCropViewState extends State<InnerCropView>
               widget.hideCropButton
                   ? const SizedBox.shrink()
                   : _buildCropButton(),
+              if (widget.asset.type == AssetType.image) _buildRotationButton(),
               if (widget.asset.type == AssetType.video) _buildPlayVideoButton(),
             ],
           ),
@@ -301,7 +333,7 @@ class _InnerCropViewState extends State<InnerCropView>
           }
         },
         theme: widget.theme.copyWith(
-          buttonTheme: const ButtonThemeData(padding: EdgeInsets.all(2)),
+          buttonTheme: widget.theme.buttonTheme.copyWith(padding: const EdgeInsets.all(2)),
         ),
         size: 32,
         // if crop ratios are the default ones, build UI similar to instagram
@@ -317,6 +349,24 @@ class _InnerCropViewState extends State<InnerCropView>
                   )
                 // otherwise simply display the selected aspect ratio
                 : Text(widget.controller.aspectRatioString),
+      ),
+    );
+  }
+
+  Widget _buildRotationButton() {
+    return Opacity(
+      opacity: 0.6,
+      child: InstaPickerCircleIconButton(
+        onTap: () {
+          if (widget.controller.isCropViewReady.value) {
+            widget.controller.rotate();
+          }
+        },
+        theme: widget.theme.copyWith(
+          buttonTheme: widget.theme.buttonTheme.copyWith(padding: const EdgeInsets.all(2)),
+        ),
+        size: 32,
+        icon: const Icon(Icons.rotate_right),
       ),
     );
   }
