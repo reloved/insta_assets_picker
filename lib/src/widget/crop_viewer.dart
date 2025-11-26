@@ -381,7 +381,7 @@ class _InnerCropViewState extends State<InnerCropView>
         child: InstaPickerCircleIconButton(
           onTap: playButtonCallback,
           theme: widget.theme.copyWith(
-            buttonTheme: const ButtonThemeData(padding: EdgeInsets.all(2)),
+            buttonTheme: widget.theme.buttonTheme.copyWith(padding: const EdgeInsets.all(2)),
           ),
           size: 32,
           icon: isControllerPlaying
