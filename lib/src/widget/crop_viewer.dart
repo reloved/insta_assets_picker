@@ -324,9 +324,7 @@ class _InnerCropViewState extends State<InnerCropView>
   }
 
   Widget _buildCropButton() {
-    return Opacity(
-      opacity: 0.6,
-      child: InstaPickerCircleIconButton(
+    return InstaPickerCircleIconButton(
         onTap: () {
           if (widget.controller.isCropViewReady.value) {
             widget.controller.nextCropRatio();
@@ -349,14 +347,10 @@ class _InnerCropViewState extends State<InnerCropView>
                   )
                 // otherwise simply display the selected aspect ratio
                 : Text(widget.controller.aspectRatioString),
-      ),
-    );
+      );
   }
-
   Widget _buildRotationButton() {
-    return Opacity(
-      opacity: 0.6,
-      child: InstaPickerCircleIconButton(
+    return InstaPickerCircleIconButton(
         onTap: () {
           if (widget.controller.isCropViewReady.value) {
             widget.controller.rotate();
@@ -367,8 +361,7 @@ class _InnerCropViewState extends State<InnerCropView>
         ),
         size: 32,
         icon: const Icon(Icons.rotate_right),
-      ),
-    );
+      );
   }
 
   Widget _buildPlayVideoButton() {
@@ -376,9 +369,7 @@ class _InnerCropViewState extends State<InnerCropView>
 
     return AnimatedBuilder(
       animation: videoController!,
-      builder: (_, __) => Opacity(
-        opacity: 0.6,
-        child: InstaPickerCircleIconButton(
+      builder: (_, __) => InstaPickerCircleIconButton(
           onTap: playButtonCallback,
           theme: widget.theme.copyWith(
             buttonTheme: widget.theme.buttonTheme.copyWith(padding: const EdgeInsets.all(2)),
@@ -388,7 +379,6 @@ class _InnerCropViewState extends State<InnerCropView>
               ? const Icon(Icons.pause_rounded)
               : const Icon(Icons.play_arrow_rounded),
         ),
-      ),
-    );
+      );
   }
 }
