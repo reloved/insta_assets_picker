@@ -21,7 +21,7 @@ dependencies:
   fraction: ^5.0.5 # to show crop ratio in crop view
   image: ^4.2.0
 
-  wechat_assets_picker: ^9.8.0
+  wechat_assets_picker: ^10.0.0
 
   # match with wechat_assets_picker package
   photo_manager: ^3.5.0
